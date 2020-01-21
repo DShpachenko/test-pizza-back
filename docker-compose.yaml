@@ -1,0 +1,31 @@
+version: '3.1'
+
+networks:
+  api_networks:
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET}
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./etc/docker/pizza.docker
+    volumes:
+      - ./:/var/www/pizza/
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa
+    networks:
+      api_networks:
+        ipv4_address: ${DOCKER_HOST_APP}
+
+  nginx:
+    image: nginx:latest
+    depends_on:
+      - app
+    volumes:
+      - ./:/var/www/pizza
+      - ./etc/nginx:/etc/nginx/conf.d/
+    command: [nginx-debug, '-g', 'daemon off;']
+    networks:
+      api_networks:
+        ipv4_address: ${DOCKER_HOST_NGINX}
